@@ -242,7 +242,7 @@
     </footer>
 
     <!-- STICKY WHATSAPP BUTTON -->
-    <a href="https://wa.me/6281234567890?text=Halo%20Admin%2C%20saya%20ingin%20tahu%20lebih%20lanjut%20tentang%20Madu%20SAE."
+    <a href="https://wa.me/62882003350385?text=Halo%20Admin%2C%20saya%20ingin%20tahu%20lebih%20lanjut%20tentang%20Madu%20SAE."
         target="_blank" class="sticky-wa" onclick="trackLead('Sticky WA')">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ffffff" width="30" height="30">
             <path
@@ -265,7 +265,7 @@
 
         function trackLead(buttonName) {
             console.log("CTA Clicked: " + buttonName);
-            
+
             const eventId = generateEventId();
 
             // 1. Memanggil FB Pixel Event (Browser-side)
@@ -278,12 +278,12 @@
 
             // 2. Memanggil Cloudflare Worker CAPI (Server-side)
             // Ganti URL di bawah dengan alamat Worker Cloudflare Anda setelah di-deploy
-            const WORKER_URL = 'https://NAMA_WORKER_ANDA.workers.dev'; 
-            
+            const WORKER_URL = 'https://NAMA_WORKER_ANDA.workers.dev';
+
             fetch(WORKER_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     event: 'Contact', // Pastikan sesuai dengan standard Meta
                     event_id: eventId, // Mengirimkan Event ID yang akurat ke server
                     content_category: buttonName,

@@ -50,10 +50,6 @@ export default {
           ]
         };
 
-        // Jika ada test_event_code (untuk keperluan Uji Peristiwa real-time)
-        if (body.testEventCode || body.test_event_code) {
-          eventData.test_event_code = body.testEventCode || body.test_event_code;
-        }
 
         const facebookResponse = await fetch(facebookApiUrl, {
           method: "POST",

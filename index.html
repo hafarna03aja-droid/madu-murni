@@ -265,12 +265,6 @@
             return 'event_' + new Date().getTime() + '_' + Math.random().toString(36).substr(2, 9);
         }
 
-        // --- UNTUK PENGUJIAN ---
-        // Jika sedang melakukan "Uji Peristiwa", masukkan kode TEST dari Facebook di sini
-        // Contoh: const TEST_EVENT_CODE = 'TEST12345';
-        const TEST_EVENT_CODE = 'TEST48246';
-        // -----------------------
-
         function trackLead(buttonName) {
             console.log("CTA Clicked: " + buttonName);
             const eventId = generateEventId();
@@ -293,7 +287,6 @@
                     eventName: 'Contact',
                     eventId: eventId,
                     buttonName: buttonName,
-                    testEventCode: TEST_EVENT_CODE, // Wajib ada saat testing
                     sourceUrl: window.location.href
                 })
             }).then(res => {

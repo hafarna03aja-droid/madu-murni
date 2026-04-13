@@ -261,6 +261,12 @@
             return 'event_' + new Date().getTime() + '_' + Math.random().toString(36).substr(2, 9);
         }
 
+        // --- UNTUK PENGUJIAN ---
+        // Jika sedang melakukan "Uji Peristiwa", masukkan kode TEST dari Facebook di sini
+        // Contoh: const TEST_EVENT_CODE = 'TEST12345';
+        const TEST_EVENT_CODE = ''; 
+        // -----------------------
+
         function trackLead(buttonName) {
             console.log("CTA Clicked: " + buttonName);
 
@@ -275,17 +281,17 @@
             }
 
             // 2. Memanggil Cloudflare Worker CAPI (Server-side)
-            // Ganti URL di bawah dengan alamat Worker Cloudflare Anda setelah di-deploy
             const WORKER_URL = 'https://madu-sae-capi.sedekahmudahgk.workers.dev';
 
             fetch(WORKER_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    event: 'Contact', // Pastikan sesuai dengan standard Meta
-                    event_id: eventId, // Mengirimkan Event ID yang akurat ke server
+                    event: 'Contact', 
+                    event_id: eventId, 
                     content_category: buttonName,
-                    sourceUrl: window.location.href
+                    sourceUrl: window.location.href,
+                    test_event_code: TEST_EVENT_CODE // Mengirim kode tes jika diisi
                 })
             }).then(response => {
                 console.log("CAPI Event dikirim ke Worker dengan ID:", eventId);

@@ -35,12 +35,11 @@ export default {
               event_name: eventName,
               event_time: Math.floor(Date.now() / 1000),
               action_source: "website",
-              event_id: eventId, // <--- WAJIB: Agar Meta tahu ini orang yang sama dengan di Pixel
+              event_id: eventId, 
               event_source_url: sourceUrl,
               user_data: {
                 client_ip_address: clientIpAddress,
                 client_user_agent: clientUserAgent,
-                // Tambahkan hashing em/ph di sini jika nanti Anda pakai form
               },
               custom_data: {
                 content_name: "Madu SAE Murni",
@@ -50,6 +49,11 @@ export default {
             }
           ]
         };
+
+        // Jika ada test_event_code (untuk keperluan Uji Peristiwa real-time)
+        if (body.test_event_code) {
+          eventData.test_event_code = body.test_event_code;
+        }
 
         const facebookResponse = await fetch(facebookApiUrl, {
           method: "POST",

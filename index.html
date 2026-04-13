@@ -11,18 +11,22 @@
 
     <!-- FB PIXEL & CAPI BASE SCRIPT -->
     <script>
-      !function(f,b,e,v,n,t,s)
-      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}(window, document,'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', '1252034179985024');
-      fbq('track', 'PageView');
+        !function (f, b, e, v, n, t, s) {
+            if (f.fbq) return; n = f.fbq = function () {
+                n.callMethod ?
+                n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+            };
+            if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+            n.queue = []; t = b.createElement(e); t.async = !0;
+            t.src = v; s = b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t, s)
+        }(window, document, 'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '1252034179985024');
+        fbq('track', 'PageView');
     </script>
-    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1252034179985024&ev=PageView&noscript=1"/></noscript>
+    <noscript><img height="1" width="1" style="display:none"
+            src="https://www.facebook.com/tr?id=1252034179985024&ev=PageView&noscript=1" /></noscript>
 
 </head>
 
@@ -264,40 +268,37 @@
         // --- UNTUK PENGUJIAN ---
         // Jika sedang melakukan "Uji Peristiwa", masukkan kode TEST dari Facebook di sini
         // Contoh: const TEST_EVENT_CODE = 'TEST12345';
-        const TEST_EVENT_CODE = 'TEST48246'; 
+        const TEST_EVENT_CODE = 'TEST48246';
         // -----------------------
 
         function trackLead(buttonName) {
             console.log("CTA Clicked: " + buttonName);
-
             const eventId = generateEventId();
 
-            // 1. Memanggil FB Pixel Event (Browser-side)
+            // 1. Kirim ke Meta Pixel (Browser-side) - SUDAH ADA
             if (typeof fbq === 'function') {
                 fbq('track', 'Contact', {
                     content_name: 'Madu SAE Lead',
                     content_category: buttonName
-                }, { eventID: eventId }); // Menyisipkan Event ID ke Pixel
+                }, { eventID: eventId });
             }
 
-            // 2. Memanggil Cloudflare Worker CAPI (Server-side)
-            const WORKER_URL = 'https://madu-sae-capi.sedekahmudahgk.workers.dev';
+            // 2. KIRIM KE SERVER (CAPI) - TAMBAHKAN INI
+            const WORKER_URL = 'https://madu-sae-capi.sedekahmudahgk.workers.dev'; // Sesuaikan dengan route Worker
 
             fetch(WORKER_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    event: 'Contact', 
-                    event_id: eventId, 
-                    content_category: buttonName,
-                    sourceUrl: window.location.href,
-                    test_event_code: TEST_EVENT_CODE // Mengirim kode tes jika diisi
+                    eventName: 'Contact',
+                    eventId: eventId,
+                    buttonName: buttonName,
+                    testEventCode: TEST_EVENT_CODE, // Wajib ada saat testing
+                    sourceUrl: window.location.href
                 })
-            }).then(response => {
+            }).then(res => {
                 console.log("CAPI Event dikirim ke Worker dengan ID:", eventId);
-            }).catch(err => {
-                console.error("Gagal mengirim CAPI Event:", err);
-            });
+            }).catch(err => console.error("CAPI Error:", err));
         }
     </script>
 </body>

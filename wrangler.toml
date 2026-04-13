@@ -1,0 +1,13 @@
+# Konfigurasi Utama Worker Cloudflare
+name = "madu-sae-capi"
+main = "worker.js"
+compatibility_date = "2024-04-13"
+
+# DILARANG MENULIS SECRET DI SINI! (FB_ACCESS_TOKEN & FB_PIXEL_ID)
+# Semua kunci rahasia harus disetting menggunakan pengaturan "Environment Variables" 
+# langsung di dashboard Cloudflare, ATAU lewat perintah CLI:
+# npx wrangler secret put FB_ACCESS_TOKEN
+# Ini menjamin bahwa token Anda 100% aman dan tidak terekspos di Github/Publik.
+
+# (Opsional) Jika Anda ingin Worker ini hanya diizinkan di satu domain spesifik:
+# route = "api.domainanda.com/track-lead"

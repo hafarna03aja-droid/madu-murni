@@ -40,7 +40,7 @@
             <p class="sub-headline">Berikan perlindungan terbaik untuk keluarga Anda. Tingkatkan imun dan stamina secara
                 alami dengan madu hutan asli yang bebas dari pakan gula sirupan.</p>
             <div class="hero-action">
-                <a href="#pricing" class="btn-cta btn-primary" onclick="trackLead('Hero')">
+                <a href="#pricing" class="btn-cta btn-primary" onclick="trackLead(event, this, 'Hero')">
                     <span class="btn-icon">🛒</span> Pesan via WhatsApp Sekarang
                 </a>
                 <p class="scarcity-text">Diskon Khusus & Gratis Ongkir Berlaku Hari Ini!</p>
@@ -120,7 +120,7 @@
                             standar food grade memastikan madu sampai di tangan Anda tanpa tumpah atau terkontaminasi.
                         </li>
                     </ul>
-                    <a href="#pricing" class="btn-cta btn-secondary" onclick="trackLead('Product')">
+                    <a href="#pricing" class="btn-cta btn-secondary" onclick="trackLead(event, this, 'Product')">
                         Saya Mau Madu SAE
                     </a>
                 </div>
@@ -205,7 +205,7 @@
                         <li>❌ Tanpa Bonus Spesial</li>
                     </ul>
                     <a href="https://wa.me/62882003350385?text=Halo%20Admin%2C%20saya%20mau%20pesan%20Madu%20SAE%20Paket%201%20Botol."
-                        target="_blank" class="btn-cta btn-outline" onclick="trackLead('Pricing 1 Botol')">
+                        target="_blank" class="btn-cta btn-outline" onclick="trackLead(event, this, 'Pricing 1 Botol')">
                         Pesan Paket 1 Botol
                     </a>
                 </div>
@@ -229,7 +229,7 @@
                     </ul>
                     <a href="https://wa.me/62882003350385?text=Halo%20Admin%2C%20saya%20mau%20pesan%20Madu%20SAE%20Paket%202%20Botol%20%2B%20Gratis%20Sendok."
                         target="_blank" class="btn-cta btn-primary pulse-animation"
-                        onclick="trackLead('Pricing 2 Botol')">
+                        onclick="trackLead(event, this, 'Pricing 2 Botol')">
                         🛒 Ya, Saya Mau Promo Best Seller!
                     </a>
                 </div>
@@ -249,7 +249,7 @@
 
     <!-- STICKY WHATSAPP BUTTON -->
     <a href="https://wa.me/62882003350385?text=Halo%20Admin%2C%20saya%20ingin%20tahu%20lebih%20lanjut%20tentang%20Madu%20SAE."
-        target="_blank" class="sticky-wa" onclick="trackLead('Sticky WA')">
+        target="_blank" class="sticky-wa" onclick="trackLead(event, this, 'Sticky WA')">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ffffff" width="30" height="30">
             <path
                 d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.125-.339-.155-.957-.406-1.89-1.258-1.2-1.096-1.928-2.188-2.029-2.32-.102-.132-.489-.648-.489-1.24 0-.592.308-.888.419-1.008.113-.122.247-.152.33-.152.083 0 .165.001.238.005.074.004.171-.027.268.204.101.242.345.836.377.898.032.062.053.134.02.21-.033.076-.051.122-.1.183-.049.06-.104.133-.146.182-.047.054-.097.112-.042.207.053.093.238.396.51.638.351.312.645.412.74.457.094.045.15.039.206-.026.056-.065.241-.282.306-.38.065-.098.129-.082.214-.051.085.031.543.256.636.303.093.047.155.07.178.11...">
@@ -269,11 +269,11 @@
             return 'event_' + new Date().getTime() + '_' + Math.random().toString(36).substr(2, 9);
         }
 
-        function trackLead(buttonName) {
+        function trackLead(event, element, buttonName) {
             console.log("CTA Clicked: " + buttonName);
             const eventId = generateEventId();
 
-            // 1. Kirim ke Meta Pixel (Browser-side) - SUDAH ADA
+            // 1. Kirim ke Meta Pixel (Browser-side)
             if (typeof fbq === 'function') {
                 fbq('track', 'Contact', {
                     content_name: 'Madu SAE Lead',
@@ -281,8 +281,8 @@
                 }, { eventID: eventId });
             }
 
-            // 2. KIRIM KE SERVER (CAPI) - TAMBAHKAN INI
-            const WORKER_URL = 'https://madu-sae-capi.sedekahmudahgk.workers.dev'; // Sesuaikan dengan route Worker
+            // 2. Kirim ke CAPI Worker
+            const WORKER_URL = 'https://madu-sae-capi.sedekahmudahgk.workers.dev';
 
             fetch(WORKER_URL, {
                 method: 'POST',
@@ -294,8 +294,15 @@
                     sourceUrl: window.location.href
                 })
             }).then(res => {
-                console.log("CAPI Event dikirim ke Worker dengan ID:", eventId);
+                console.log("CAPI Event dikirim: ", eventId);
             }).catch(err => console.error("CAPI Error:", err));
+
+            // 3. Tambahkan ID ke Link WA (Untuk Sinkronisasi n8n)
+            if (element && element.href && element.href.includes('wa.me')) {
+                // Tambahkan ID unik di akhir pesan teks
+                const trackingTag = encodeURIComponent(` [ID: ${eventId}]`);
+                element.href = element.href + trackingTag;
+            }
         }
     </script>
 </body>

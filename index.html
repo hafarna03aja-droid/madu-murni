@@ -297,12 +297,7 @@
                 console.log("CAPI Event dikirim: ", eventId);
             }).catch(err => console.error("CAPI Error:", err));
 
-            // 3. Tambahkan ID ke Link WA (Untuk Sinkronisasi n8n)
-            if (element && element.href && element.href.includes('wa.me')) {
-                // Tambahkan ID unik di akhir pesan teks
-                const trackingTag = encodeURIComponent(` [ID: ${eventId}]`);
-                element.href = element.href + trackingTag;
-            }
+
         }
     </script>
 </body>

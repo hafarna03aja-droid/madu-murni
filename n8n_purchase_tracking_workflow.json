@@ -1,0 +1,340 @@
+{
+  "name": "Madu S4E - Purchase Tracking ke Meta CAPI",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-incoming",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-wa",
+      "name": "📱 Webhook WA Masuk",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "madu-s4e-wa-incoming",
+      "notes": "SESUAIKAN: Ganti path ini dengan webhook URL WA Business Anda yang sudah ada. Atau sambungkan dari workflow WA yang sudah berjalan."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-lunas",
+              "leftValue": "={{ $json.body.entry[0].changes[0].value.messages[0].text.body }}",
+              "rightValue": "LUNAS",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-if-lunas",
+      "name": "🔍 Apakah Pesan Mengandung LUNAS?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "notes": "SESUAIKAN: Ganti path $json sesuai struktur data WA API Anda. Kata kunci 'LUNAS' bisa diganti sesuai SOP CS Anda."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "assign-phone",
+              "name": "phone_number",
+              "value": "={{ $json.body.entry[0].changes[0].value.messages[0].from }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-message",
+              "name": "full_message",
+              "value": "={{ $json.body.entry[0].changes[0].value.messages[0].text.body }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-amount",
+              "name": "purchase_value",
+              "value": "={{ $json.body.entry[0].changes[0].value.messages[0].text.body.replace(/[^0-9]/g, '') || '275000' }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-timestamp",
+              "name": "event_time",
+              "value": "={{ Math.floor(Date.now() / 1000) }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-set-data",
+      "name": "📋 Siapkan Data dari Pesan",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [720, 180],
+      "notes": "Node ini mengekstrak: nomor HP pembeli, isi pesan lengkap, dan nominal (angka) dari pesan LUNAS. Contoh pesan 'LUNAS 275000' → purchase_value = 275000"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "GANTI_DENGAN_ID_GOOGLE_SHEET_ANDA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "No HP",
+              "lookupValue": "={{ $('📋 Siapkan Data dari Pesan').item.json.phone_number }}"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "id": "node-sheets-lookup",
+      "name": "📊 Cari Data di Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [960, 180],
+      "notes": "SESUAIKAN: (1) Ganti 'GANTI_DENGAN_ID_GOOGLE_SHEET_ANDA' dengan Sheet ID Anda — ambil dari URL Google Sheets. (2) Ganti 'No HP' dengan nama kolom nomor HP di sheet Anda. (3) Pilih credential Google Sheets yang sudah terhubung."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "assign-event-id",
+              "name": "event_id",
+              "value": "=purchase_{{ $('📋 Siapkan Data dari Pesan').item.json.event_time }}_{{ $('📋 Siapkan Data dari Pesan').item.json.phone_number }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-customer-name",
+              "name": "customer_name",
+              "value": "={{ $json['Nama'] || 'Pelanggan' }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-customer-phone",
+              "name": "customer_phone",
+              "value": "={{ $('📋 Siapkan Data dari Pesan').item.json.phone_number }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-paket",
+              "name": "paket",
+              "value": "={{ $json['Paket'] || 'Paket Madu S4E' }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-value",
+              "name": "final_value",
+              "value": "={{ $('📋 Siapkan Data dari Pesan').item.json.purchase_value || $json['Harga'] || '275000' }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-merge-data",
+      "name": "🔗 Gabungkan Data Pelanggan",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1200, 180],
+      "notes": "SESUAIKAN: Ganti 'Nama', 'Paket', 'Harga' dengan nama kolom yang sesuai di Google Sheets Anda."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://madu-S4E-capi.sedekahmudahgk.workers.dev",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"eventName\": \"Purchase\",\n  \"eventId\": \"{{ $json.event_id }}\",\n  \"sourceUrl\": \"https://[DOMAIN-LANDING-PAGE-ANDA]/\",\n  \"phone\": \"{{ $json.customer_phone }}\",\n  \"value\": {{ $json.final_value }},\n  \"currency\": \"IDR\",\n  \"buttonName\": \"CS Konfirmasi - {{ $json.paket }}\",\n  \"customerName\": \"{{ $json.customer_name }}\"\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "node-http-worker",
+      "name": "🚀 Kirim Purchase ke Meta CAPI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1440, 180],
+      "notes": "SESUAIKAN: Ganti '[DOMAIN-LANDING-PAGE-ANDA]' dengan domain landing page Anda. URL Worker sudah sesuai dengan setup Anda."
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "GANTI_DENGAN_ID_GOOGLE_SHEET_ANDA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "LUNAS",
+            "Tanggal Konfirmasi": "={{ $now.toISO() }}",
+            "Nilai Transaksi": "={{ $('🔗 Gabungkan Data Pelanggan').item.json.final_value }}",
+            "Event ID CAPI": "={{ $('🔗 Gabungkan Data Pelanggan').item.json.event_id }}"
+          },
+          "matchingColumns": ["No HP"],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "node-sheets-update",
+      "name": "✅ Update Status di Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1680, 180],
+      "notes": "SESUAIKAN: Sesuaikan nama kolom dengan struktur sheet Anda. Node ini update baris pelanggan: tambah status LUNAS, tanggal, nilai, dan Event ID untuk rekap internal."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ok\", \"message\": \"Webhook diterima\" }",
+        "options": {}
+      },
+      "id": "node-response",
+      "name": "↩️ Response Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [720, 420],
+      "notes": "Kirim response 200 OK ke WA API agar tidak retry. Dipanggil baik saat LUNAS maupun bukan."
+    }
+  ],
+  "connections": {
+    "📱 Webhook WA Masuk": {
+      "main": [
+        [
+          {
+            "node": "🔍 Apakah Pesan Mengandung LUNAS?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔍 Apakah Pesan Mengandung LUNAS?": {
+      "main": [
+        [
+          {
+            "node": "📋 Siapkan Data dari Pesan",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "↩️ Response Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📋 Siapkan Data dari Pesan": {
+      "main": [
+        [
+          {
+            "node": "📊 Cari Data di Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📊 Cari Data di Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "🔗 Gabungkan Data Pelanggan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔗 Gabungkan Data Pelanggan": {
+      "main": [
+        [
+          {
+            "node": "🚀 Kirim Purchase ke Meta CAPI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🚀 Kirim Purchase ke Meta CAPI": {
+      "main": [
+        [
+          {
+            "node": "✅ Update Status di Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": ""
+  },
+  "pinData": {},
+  "versionId": "",
+  "triggerCount": 1,
+  "tags": [
+    {
+      "name": "Madu S4E",
+      "createdAt": ""
+    },
+    {
+      "name": "Meta CAPI",
+      "createdAt": ""
+    },
+    {
+      "name": "Purchase Tracking",
+      "createdAt": ""
+    }
+  ]
+}

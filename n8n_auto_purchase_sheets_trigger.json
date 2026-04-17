@@ -1,0 +1,338 @@
+{
+  "name": "Madu S4E - Auto Purchase CAPI (dari Google Sheets)",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "GANTI_ID_GOOGLE_SHEET_ANDA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "id": "node-sheets-trigger",
+      "name": "📊 Trigger - Row Baru di Google Sheets",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "notes": "SESUAIKAN:\n1. Ganti 'GANTI_ID_GOOGLE_SHEET_ANDA' → ambil dari URL Google Sheets Anda (bagian setelah /d/ dan sebelum /edit)\n2. Ganti 'Sheet1' → nama tab sheet add_order Anda\n3. Pilih credential Google yang sudah terhubung"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "assign-eventid",
+              "name": "event_id",
+              "value": "=purchase_{{ $now.toMillis() }}_{{ $json['No HP'] || $json['phone'] || $json['nomor'] || 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-phone",
+              "name": "phone",
+              "value": "={{ $json['No HP'] || $json['phone'] || $json['nomor'] || $json['Nomor HP'] || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-name",
+              "name": "customer_name",
+              "value": "={{ $json['Nama'] || $json['name'] || $json['nama'] || 'Pelanggan' }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-paket",
+              "name": "paket",
+              "value": "={{ $json['Paket'] || $json['paket'] || $json['Produk'] || $json['produk'] || 'Madu S4E' }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-value",
+              "name": "purchase_value",
+              "value": "={{ Number(($json['Harga'] || $json['harga'] || $json['Total'] || $json['total'] || '275000').toString().replace(/[^0-9]/g, '')) || 275000 }}",
+              "type": "number"
+            },
+            {
+              "id": "assign-source",
+              "name": "source_url",
+              "value": "https://GANTI_DOMAIN_ANDA/",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-prepare",
+      "name": "📋 Siapkan Data Order",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [500, 300],
+      "notes": "SESUAIKAN:\n1. Ganti 'No HP', 'Nama', 'Paket', 'Harga' dengan nama kolom sesuai Google Sheets Anda\n2. Ganti 'https://GANTI_DOMAIN_ANDA/' dengan URL landing page Anda\n\nNode ini sudah mencoba beberapa variasi nama kolom otomatis."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-value",
+              "leftValue": "={{ $json.purchase_value }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-if-valid",
+      "name": "✅ Validasi Data Order",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [760, 300],
+      "notes": "Filter: hanya proses jika nilai transaksi > 0 (untuk menghindari row kosong atau error)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://madu-S4E-capi.sedekahmudahgk.workers.dev",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"eventName\": \"Purchase\",\n  \"eventId\": \"{{ $json.event_id }}\",\n  \"sourceUrl\": \"{{ $json.source_url }}\",\n  \"phone\": \"{{ $json.phone }}\",\n  \"value\": {{ $json.purchase_value }},\n  \"currency\": \"IDR\",\n  \"buttonName\": \"Auto - {{ $json.paket }}\",\n  \"customerName\": \"{{ $json.customer_name }}\"\n}",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "node-http-capi",
+      "name": "🚀 Kirim Purchase ke Meta CAPI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1020, 180],
+      "notes": "Mengirim event Purchase ke Cloudflare Worker Anda.\nURL Worker sudah sesuai setup Anda: madu-S4E-capi.sedekahmudahgk.workers.dev\nTidak perlu diubah."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "id": "cond-success",
+              "leftValue": "={{ $json.body.success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-if-success",
+      "name": "🔍 Berhasil Terkirim ke Meta?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1280, 180],
+      "notes": "Cek apakah Meta CAPI menerima event dengan sukses"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "GANTI_ID_GOOGLE_SHEET_ANDA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "CAPI Status": "✅ Terkirim",
+            "CAPI Event ID": "={{ $('📋 Siapkan Data Order').item.json.event_id }}",
+            "CAPI Waktu Kirim": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": ["No HP"],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "node-sheets-success",
+      "name": "✅ Tandai CAPI Sukses di Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1540, 100],
+      "notes": "SESUAIKAN:\n1. Ganti Sheet ID\n2. Tambahkan kolom 'CAPI Status', 'CAPI Event ID', 'CAPI Waktu Kirim' di Google Sheets Anda\n3. Ganti 'No HP' dengan nama kolom identifier di sheet Anda\n\nKolom ini opsional tapi sangat berguna untuk audit."
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "GANTI_ID_GOOGLE_SHEET_ANDA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "CAPI Status": "❌ Gagal - Retry Manual",
+            "CAPI Event ID": "={{ $('📋 Siapkan Data Order').item.json.event_id }}",
+            "CAPI Waktu Kirim": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": ["No HP"],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "node-sheets-fail",
+      "name": "❌ Tandai CAPI Gagal di Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1540, 280],
+      "notes": "Jika gagal terkirim ke Meta, tandai di Sheets agar bisa dicek manual."
+    },
+    {
+      "parameters": {
+        "respondWith": "noData",
+        "options": {}
+      },
+      "id": "node-skip",
+      "name": "⏭️ Skip (Data Tidak Valid)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1020, 420],
+      "notes": "Row tidak diproses karena nilai transaksi = 0 atau data tidak lengkap"
+    }
+  ],
+  "connections": {
+    "📊 Trigger - Row Baru di Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "📋 Siapkan Data Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📋 Siapkan Data Order": {
+      "main": [
+        [
+          {
+            "node": "✅ Validasi Data Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Validasi Data Order": {
+      "main": [
+        [
+          {
+            "node": "🚀 Kirim Purchase ke Meta CAPI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "⏭️ Skip (Data Tidak Valid)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🚀 Kirim Purchase ke Meta CAPI": {
+      "main": [
+        [
+          {
+            "node": "🔍 Berhasil Terkirim ke Meta?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔍 Berhasil Terkirim ke Meta?": {
+      "main": [
+        [
+          {
+            "node": "✅ Tandai CAPI Sukses di Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "❌ Tandai CAPI Gagal di Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "meta": {
+    "instanceId": ""
+  },
+  "pinData": {},
+  "tags": [
+    { "name": "Madu S4E" },
+    { "name": "Meta CAPI" },
+    { "name": "Purchase" },
+    { "name": "Auto Tracking" }
+  ]
+}

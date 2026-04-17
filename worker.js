@@ -42,7 +42,7 @@ export default {
                 client_user_agent: clientUserAgent,
               },
               custom_data: {
-                content_name: "Madu SAE Murni",
+                content_name: "Madu S4E Murni",
                 value: 150000,
                 currency: "IDR"
               }
@@ -72,6 +72,6 @@ export default {
       }
     }
 
-    return new Response("Madu SAE CAPI Worker is Running 🔥", { status: 200 });
+    return new Response("Madu S4E CAPI Worker is Running 🔥", { status: 200 });
   },
 };

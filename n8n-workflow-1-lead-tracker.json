@@ -1,0 +1,198 @@
+{
+  "name": "Madu S4E - Workflow 1: Lead Tracker",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "madu-lead",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000001",
+      "name": "Webhook - Terima Klik WA",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "madu-lead-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "field-event-id",
+              "name": "Event_ID",
+              "value": "={{ $json.body.event_id }}",
+              "type": "string"
+            },
+            {
+              "id": "field-paket",
+              "name": "Paket",
+              "value": "={{ $json.body.button_name }}",
+              "type": "string"
+            },
+            {
+              "id": "field-referrer",
+              "name": "Referrer",
+              "value": "={{ $json.body.referrer || 'direct' }}",
+              "type": "string"
+            },
+            {
+              "id": "field-source-url",
+              "name": "Source_URL",
+              "value": "={{ $json.body.source_url }}",
+              "type": "string"
+            },
+            {
+              "id": "field-waktu-klik",
+              "name": "Waktu_Klik",
+              "value": "={{ $json.body.timestamp }}",
+              "type": "string"
+            },
+            {
+              "id": "field-status",
+              "name": "Status",
+              "value": "LEAD",
+              "type": "string"
+            },
+            {
+              "id": "field-nama",
+              "name": "Nama",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "field-no-hp",
+              "name": "No_HP",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "field-order-value",
+              "name": "Order_Value",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "field-waktu-bayar",
+              "name": "Waktu_Bayar",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "field-sent-capi",
+              "name": "Sent_to_CAPI",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0002-0002-0002-000000000002",
+      "name": "Set - Format Data Lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "GANTI_DENGAN_ID_SPREADSHEET_ANDA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Lead Tracker",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Event_ID": "={{ $json.Event_ID }}",
+            "Paket": "={{ $json.Paket }}",
+            "Nama": "={{ $json.Nama }}",
+            "No_HP": "={{ $json.No_HP }}",
+            "Referrer": "={{ $json.Referrer }}",
+            "Source_URL": "={{ $json.Source_URL }}",
+            "Waktu_Klik": "={{ $json.Waktu_Klik }}",
+            "Status": "={{ $json.Status }}",
+            "Order_Value": "={{ $json.Order_Value }}",
+            "Waktu_Bayar": "={{ $json.Waktu_Bayar }}",
+            "Sent_to_CAPI": "={{ $json.Sent_to_CAPI }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            { "id": "Event_ID", "displayName": "Event_ID", "required": false, "defaultMatch": false, "canBeUsedToMatch": true, "display": true, "type": "string" },
+            { "id": "Paket", "displayName": "Paket", "required": false, "defaultMatch": false, "canBeUsedToMatch": true, "display": true, "type": "string" },
+            { "id": "Nama", "displayName": "Nama", "required": false, "defaultMatch": false, "canBeUsedToMatch": true, "display": true, "type": "string" },
+            { "id": "No_HP", "displayName": "No_HP", "required": false, "defaultMatch": false, "canBeUsedToMatch": true, "display": true, "type": "string" },
+            { "id": "Referrer", "displayName": "Referrer", "required": false, "defaultMatch": false, "canBeUsedToMatch": true, "display": true, "type": "string" },
+            { "id": "Source_URL", "displayName": "Source_URL", "required": false, "defaultMatch": false, "canBeUsedToMatch": true, "display": true, "type": "string" },
+            { "id": "Waktu_Klik", "displayName": "Waktu_Klik", "required": false, "defaultMatch": false, "canBeUsedToMatch": true, "display": true, "type": "string" },
+            { "id": "Status", "displayName": "Status", "required": false, "defaultMatch": false, "canBeUsedToMatch": true, "display": true, "type": "string" },
+            { "id": "Order_Value", "displayName": "Order_Value", "required": false, "defaultMatch": false, "canBeUsedToMatch": true, "display": true, "type": "string" },
+            { "id": "Waktu_Bayar", "displayName": "Waktu_Bayar", "required": false, "defaultMatch": false, "canBeUsedToMatch": true, "display": true, "type": "string" },
+            { "id": "Sent_to_CAPI", "displayName": "Sent_to_CAPI", "required": false, "defaultMatch": false, "canBeUsedToMatch": true, "display": true, "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0003-0003-0003-000000000003",
+      "name": "Google Sheets - Simpan Lead",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [750, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GANTI_DENGAN_CREDENTIAL_ID_GOOGLE_ANDA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ok\", \"message\": \"Lead berhasil dicatat\" }",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0004-0004-0004-000000000004",
+      "name": "Response - 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [750, 480]
+    }
+  ],
+  "connections": {
+    "Webhook - Terima Klik WA": {
+      "main": [
+        [
+          { "node": "Set - Format Data Lead", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Set - Format Data Lead": {
+      "main": [
+        [
+          { "node": "Google Sheets - Simpan Lead", "type": "main", "index": 0 },
+          { "node": "Response - 200 OK", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "madu-s4e-v1",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "madu-s4e-workflow"
+  },
+  "id": "workflow-madu-lead-tracker",
+  "tags": [
+    { "createdAt": "2026-04-19T00:00:00.000Z", "updatedAt": "2026-04-19T00:00:00.000Z", "id": "tag-madu-s4e", "name": "Madu S4E" }
+  ]
+}

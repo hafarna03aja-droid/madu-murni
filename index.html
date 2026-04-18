@@ -37,7 +37,9 @@
         <div class="container hero-content">
             <span class="badge">💯 100% Madu Murni & Alami</span>
             <h1 class="headline">Kemurnian <span class="highlight">Madu S4E</span> Full Nektar & Bersanad</h1>
-            <p class="sub-headline">Hadir dalam dua varian pilihan: <strong>Madu S4E Akasia</strong> & <strong>Madu S4E Kaliandra</strong>. Berikan perlindungan terbaik untuk keluarga Anda dengan madu hutan asli yang bebas dari pakan gula sirupan.</p>
+            <p class="sub-headline">Hadir dalam dua varian pilihan: <strong>Madu S4E Akasia</strong> & <strong>Madu S4E
+                    Kaliandra</strong>. Berikan perlindungan terbaik untuk keluarga Anda dengan madu hutan asli yang
+                bebas dari pakan gula sirupan.</p>
             <div class="hero-action">
                 <a href="#pricing" class="btn-cta btn-primary" onclick="trackLead(event, this, 'Hero')">
                     <span class="btn-icon">🛒</span> Pesan via WhatsApp Sekarang
@@ -73,7 +75,8 @@
     <section class="usp-section">
         <div class="container">
             <h2 class="section-title">Mengapa Harus <span class="highlight">Madu S4E</span>?</h2>
-            <p class="section-subtitle">Tersedia varian <strong>Akasia</strong> & <strong>Kaliandra</strong> — dihasilkan dengan kejujuran, menjamin kualitas terbaik untuk Anda dan keluarga.
+            <p class="section-subtitle">Tersedia varian <strong>Akasia</strong> & <strong>Kaliandra</strong> —
+                dihasilkan dengan kejujuran, menjamin kualitas terbaik untuk Anda dan keluarga.
             </p>
 
             <div class="usp-grid">
@@ -108,12 +111,18 @@
                 </div>
                 <div class="product-info">
                     <h2>Merasakan Kemurnian dalam Setiap Tetesan</h2>
-                    <p>Madu S4E hadir dalam <strong>dua varian unggulan</strong> — pilih sesuai selera dan kebutuhan Anda:</p>
+                    <p>Madu S4E hadir dalam <strong>dua varian unggulan</strong> — pilih sesuai selera dan kebutuhan
+                        Anda:</p>
                     <ul class="product-features">
-                        <li><span class="check">🌼</span> <strong>Madu S4E Akasia</strong> — Rasa manis ringan & lembut, aroma floral khas bunga akasia. Cocok untuk konsumsi harian anak-anak hingga lansia.</li>
-                        <li><span class="check">🌺</span> <strong>Madu S4E Kaliandra</strong> — Rasa manis kuat dengan sedikit rasa asam alami, aroma bunga kaliandra yang kaya. Favorit para pecinta madu sejati.</li>
-                        <li><span class="check">✔️</span> <strong>Full Nektar & Raw Honey</strong> — Tanpa pemanasan, tanpa campuran, enzim & vitamin alami tetap utuh.</li>
-                        <li><span class="check">✔️</span> <strong>Kemasan Aman & Premium</strong> — Dikemas steril standar food grade, aman sampai ke tangan Anda.</li>
+                        <li><span class="check">🌼</span> <strong>Madu S4E Akasia</strong> — Rasa manis ringan & lembut,
+                            aroma floral khas bunga akasia. Cocok untuk konsumsi harian anak-anak hingga lansia.</li>
+                        <li><span class="check">🌺</span> <strong>Madu S4E Kaliandra</strong> — Rasa manis kuat dengan
+                            sedikit rasa asam alami, aroma bunga kaliandra yang kaya. Favorit para pecinta madu sejati.
+                        </li>
+                        <li><span class="check">✔️</span> <strong>Full Nektar & Raw Honey</strong> — Tanpa pemanasan,
+                            tanpa campuran, enzim & vitamin alami tetap utuh.</li>
+                        <li><span class="check">✔️</span> <strong>Kemasan Aman & Premium</strong> — Dikemas steril
+                            standar food grade, aman sampai ke tangan Anda.</li>
                     </ul>
                     <a href="#pricing" class="btn-cta btn-secondary" onclick="trackLead(event, this, 'Product')">
                         Saya Mau Madu S4E
@@ -294,6 +303,20 @@
                 console.log("CAPI Event dikirim: ", eventId);
             }).catch(err => console.error("CAPI Error:", err));
 
+            // 3. Kirim ke n8n Lead Tracker (catat di Google Sheets)
+            const N8N_WEBHOOK = 'https://n8n-usnbl7r2z4mv.jkt2.sumopod.my.id/webhook/madu-lead';
+
+            fetch(N8N_WEBHOOK, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    event_id: eventId,
+                    button_name: buttonName,
+                    source_url: window.location.href,
+                    referrer: document.referrer || 'direct',
+                    timestamp: new Date().toISOString()
+                })
+            }).catch(err => console.error("n8n Webhook Error:", err));
 
         }
     </script>

@@ -1,0 +1,229 @@
+{
+  "name": "Madu S4E - Workflow 2: Purchase CAPI",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "GANTI_DENGAN_ID_SPREADSHEET_ANDA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Lead Tracker",
+          "mode": "name"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "id": "b1c2d3e4-0001-0001-0001-000000000001",
+      "name": "Google Sheets Trigger - Pantau Perubahan",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 4,
+      "position": [250, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GANTI_DENGAN_CREDENTIAL_ID_GOOGLE_ANDA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-status-paid",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "PAID",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-not-sent",
+              "leftValue": "={{ $json.Sent_to_CAPI }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b1c2d3e4-0002-0002-0002-000000000002",
+      "name": "IF - Status PAID dan Belum Dikirim",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n//  NODE: Hash Data & Siapkan Payload Meta CAPI\n//  Dokumentasi CAPI: https://developers.facebook.com/docs/marketing-api/conversions-api\n// ============================================================\n\nconst crypto = require('crypto');\n\n// Helper: SHA-256 hash untuk data PII sesuai syarat Meta\nfunction sha256(value) {\n  if (!value || value.toString().trim() === '') return null;\n  return crypto\n    .createHash('sha256')\n    .update(value.toString().trim().toLowerCase())\n    .digest('hex');\n}\n\n// Ambil data dari baris Google Sheets\nconst row = $input.item.json;\n\nconst phone     = (row.No_HP || '').toString().replace(/\\D/g, ''); // hilangkan non-digit\nconst nama      = (row.Nama || '').toString().trim();\nconst eventId   = (row.Event_ID || '').toString();\nconst paket     = (row.Paket || '').toString();\nconst sourceUrl = (row.Source_URL || 'https://madus4e.com').toString();\n\n// Konversi nilai transaksi ke number\nconst orderValue = parseFloat((row.Order_Value || '0').toString().replace(/[^0-9.]/g, '')) || 0;\n\n// Timestamp bayar (gunakan sekarang jika kosong)\nconst bayarTime = row.Waktu_Bayar\n  ? new Date(row.Waktu_Bayar).getTime() / 1000\n  : Math.floor(Date.now() / 1000);\n\n// Bangun user_data dengan hash\nconst userData = {\n  country: ['62'],          // kode negara Indonesia\n};\n\nif (phone) {\n  // Format standar Meta: 62 + nomor (tanpa leading 0)\n  const formattedPhone = phone.startsWith('0')\n    ? '62' + phone.substring(1)\n    : phone.startsWith('62')\n    ? phone\n    : '62' + phone;\n  userData.ph = [sha256(formattedPhone)];\n}\n\nif (nama) {\n  // Pisah nama depan dan belakang\n  const namaParts = nama.split(' ');\n  userData.fn = [sha256(namaParts[0])];\n  if (namaParts.length > 1) {\n    userData.ln = [sha256(namaParts.slice(1).join(' '))];\n  }\n}\n\n// Payload final ke Meta CAPI\nconst payload = {\n  data: [\n    {\n      event_name: 'Purchase',\n      event_time: Math.floor(bayarTime),\n      event_id: eventId + '_purchase',   // ID unik untuk dedup CAPI vs Pixel\n      event_source_url: sourceUrl,\n      action_source: 'website',\n      user_data: userData,\n      custom_data: {\n        currency: 'IDR',\n        value: orderValue,\n        content_name: paket,\n        content_type: 'product',\n        order_id: eventId\n      }\n    }\n  ]\n};\n\n// Teruskan event_id asli untuk update Sheets nanti\nreturn {\n  json: {\n    ...payload,\n    _meta: {\n      event_id: eventId,\n      row_index: row._rowNumber || row.rowNumber || null\n    }\n  }\n};\n"
+      },
+      "id": "b1c2d3e4-0003-0003-0003-000000000003",
+      "name": "Code - Hash Data & Buat Payload CAPI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/1446070669893860/events",
+        "authentication": "none",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "GANTI_DENGAN_META_ACCESS_TOKEN_ANDA"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify({ data: $json.data }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "b1c2d3e4-0004-0004-0004-000000000004",
+      "name": "HTTP - Kirim Purchase ke Meta CAPI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 220]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "GANTI_DENGAN_ID_SPREADSHEET_ANDA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Lead Tracker",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Event_ID": "={{ $('Code - Hash Data & Buat Payload CAPI').item.json._meta.event_id }}",
+            "Sent_to_CAPI": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": ["Event_ID"],
+          "schema": [
+            { "id": "Event_ID", "displayName": "Event_ID", "required": false, "defaultMatch": true, "canBeUsedToMatch": true, "display": true, "type": "string" },
+            { "id": "Sent_to_CAPI", "displayName": "Sent_to_CAPI", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b1c2d3e4-0005-0005-0005-000000000005",
+      "name": "Google Sheets - Tandai Sent to CAPI",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1250, 220],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GANTI_DENGAN_CREDENTIAL_ID_GOOGLE_ANDA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "skipped-reason",
+              "name": "skipped_reason",
+              "value": "Status bukan PAID atau sudah dikirim ke CAPI",
+              "type": "string"
+            },
+            {
+              "id": "skipped-event-id",
+              "name": "event_id",
+              "value": "={{ $json.Event_ID }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b1c2d3e4-0006-0006-0006-000000000006",
+      "name": "Set - Log Dilewati",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [750, 460]
+    }
+  ],
+  "connections": {
+    "Google Sheets Trigger - Pantau Perubahan": {
+      "main": [
+        [
+          { "node": "IF - Status PAID dan Belum Dikirim", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "IF - Status PAID dan Belum Dikirim": {
+      "main": [
+        [
+          { "node": "Code - Hash Data & Buat Payload CAPI", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Set - Log Dilewati", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Code - Hash Data & Buat Payload CAPI": {
+      "main": [
+        [
+          { "node": "HTTP - Kirim Purchase ke Meta CAPI", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "HTTP - Kirim Purchase ke Meta CAPI": {
+      "main": [
+        [
+          { "node": "Google Sheets - Tandai Sent to CAPI", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "madu-s4e-v1",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "madu-s4e-workflow"
+  },
+  "id": "workflow-madu-purchase-capi",
+  "tags": [
+    { "createdAt": "2026-04-19T00:00:00.000Z", "updatedAt": "2026-04-19T00:00:00.000Z", "id": "tag-madu-s4e", "name": "Madu S4E" }
+  ]
+}

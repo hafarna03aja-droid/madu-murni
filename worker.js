@@ -29,14 +29,15 @@ export default {
     // ============================================================
     // 1. HANDLING CORS
     // ============================================================
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Max-Age": "86400",
+    };
+
     if (request.method === "OPTIONS") {
-      return new Response(null, {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-        },
-      });
+      return new Response(null, { status: 204, headers: corsHeaders });
     }
 
     // ============================================================
@@ -135,10 +136,7 @@ export default {
           }),
           {
             status:  200,
-            headers: {
-              "Content-Type":                "application/json",
-              "Access-Control-Allow-Origin": "*",
-            },
+            headers: { "Content-Type": "application/json", ...corsHeaders },
           }
         );
 
@@ -147,10 +145,7 @@ export default {
           JSON.stringify({ error: error.message }),
           {
             status:  400,
-            headers: {
-              "Content-Type":                "application/json",
-              "Access-Control-Allow-Origin": "*",
-            },
+            headers: { "Content-Type": "application/json", ...corsHeaders },
           }
         );
       }
@@ -161,6 +156,7 @@ export default {
     // ============================================================
     return new Response("Madu S4E CAPI Worker is Running 🔥 | Contact & Purchase Ready ✅", {
       status: 200,
+      headers: corsHeaders,
     });
   },
 };

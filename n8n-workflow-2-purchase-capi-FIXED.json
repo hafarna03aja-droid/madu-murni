@@ -1,0 +1,163 @@
+{
+  "name": "Madu S4E - Workflow 2 (FIXED): Purchase CAPI",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "GANTI_DENGAN_ID_SPREADSHEET_ANDA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Lead Tracker",
+          "mode": "name"
+        },
+        "event": "rowUpdated",
+        "columnToWatch": "Status",
+        "options": {}
+      },
+      "id": "fixed-trigger-id",
+      "name": "Google Sheets Trigger - Pantau Update Status",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 4,
+      "position": [0, 0],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GANTI_DENGAN_CREDENTIAL_ID_GOOGLE_ANDA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-status-paid",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "PAID",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-not-sent",
+              "leftValue": "={{ $json.Sent_to_CAPI }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "fixed-if-id",
+      "name": "IF - Status PAID dan Belum Dikirim",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n//  NODE: Hash Data & Siapkan Payload Meta CAPI\n// ============================================================\n\nconst crypto = require('crypto');\n\nfunction sha256(value) {\n  if (!value || value.toString().trim() === '') return null;\n  return crypto\n    .createHash('sha256')\n    .update(value.toString().trim().toLowerCase())\n    .digest('hex');\n}\n\nconst row = $input.item.json;\nconst phone = (row.No_HP || '').toString().replace(/\\D/g, '');\nconst nama = (row.Nama || '').toString().trim();\nconst eventId = (row.Event_ID || '').toString();\nconst paket = (row.Paket || '').toString();\nconst sourceUrl = (row.Source_URL || 'https://madubersanad.web.id').toString();\nconst orderValue = parseFloat((row.Order_Value || '0').toString().replace(/[^0-9.]/g, '')) || 0;\n\nconst bayarTime = row.Waktu_Bayar\n  ? new Date(row.Waktu_Bayar).getTime() / 1000\n  : Math.floor(Date.now() / 1000);\n\nconst userData = {\n  country: ['62'],\n};\n\nif (phone) {\n  const formattedPhone = phone.startsWith('0') ? '62' + phone.substring(1) : (phone.startsWith('62') ? phone : '62' + phone);\n  userData.ph = [sha256(formattedPhone)];\n}\n\nif (nama) {\n  const namaParts = nama.split(' ');\n  userData.fn = [sha256(namaParts[0])];\n  if (namaParts.length > 1) userData.ln = [sha256(namaParts.slice(1).join(' '))];\n}\n\nreturn {\n  json: {\n    data: [{\n      event_name: 'Purchase',\n      event_time: Math.floor(bayarTime),\n      event_id: eventId + '_purchase',\n      event_source_url: sourceUrl,\n      action_source: 'website',\n      user_data: userData,\n      custom_data: {\n        currency: 'IDR',\n        value: orderValue,\n        content_name: paket,\n        content_type: 'product',\n        order_id: eventId\n      }\n    }],\n    _meta: {\n      event_id: eventId\n    }\n  }\n};\n"
+      },
+      "id": "fixed-code-id",
+      "name": "Code - Hash Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, -80]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/1446070669893860/events",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "GANTI_DENGAN_META_ACCESS_TOKEN_ANDA"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify({ data: $json.data }) }}",
+        "options": {}
+      },
+      "id": "fixed-http-id",
+      "name": "HTTP - Kirim ke Meta CAPI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, -80]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "GANTI_DENGAN_ID_SPREADSHEET_ANDA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Lead Tracker",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Event_ID": "={{ $('Code - Hash Data').item.json._meta.event_id }}",
+            "Sent_to_CAPI": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": ["Event_ID"]
+        },
+        "options": {}
+      },
+      "id": "fixed-update-id",
+      "name": "Google Sheets - Tandai Sukses",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [880, -80],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GANTI_DENGAN_CREDENTIAL_ID_GOOGLE_ANDA",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Google Sheets Trigger - Pantau Update Status": {
+      "main": [[{ "node": "IF - Status PAID dan Belum Dikirim", "type": "main", "index": 0 }]]
+    },
+    "IF - Status PAID dan Belum Dikirim": {
+      "main": [[{ "node": "Code - Hash Data", "type": "main", "index": 0 }]]
+    },
+    "Code - Hash Data": {
+      "main": [[{ "node": "HTTP - Kirim ke Meta CAPI", "type": "main", "index": 0 }]]
+    },
+    "HTTP - Kirim ke Meta CAPI": {
+      "main": [[{ "node": "Google Sheets - Tandai Sukses", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

@@ -41,7 +41,35 @@ export default {
     }
 
     // ============================================================
-    // 2. HANDLING POST REQUEST (dari Landing Page & n8n)
+    // 2. ROUTE: /lead → Proxy ke n8n (server-to-server, no CORS)
+    // ============================================================
+    const url = new URL(request.url);
+    if (request.method === "POST" && url.pathname === "/lead") {
+      try {
+        const bodyText = await request.text();
+        const N8N_URL = "https://n8n-usnbl7r2z4mv.jkt2.sumopod.my.id/webhook/madu-lead";
+        // Fire-and-forget ke n8n (server-side, tidak ada CORS)
+        ctx.waitUntil(
+          fetch(N8N_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: bodyText,
+          }).catch(() => {}) // abaikan error n8n agar tidak ganggu response
+        );
+        return new Response(
+          JSON.stringify({ success: true, routed: "n8n" }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      } catch (error) {
+        return new Response(
+          JSON.stringify({ error: error.message }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+    }
+
+    // ============================================================
+    // 3. HANDLING POST REQUEST (dari Landing Page & n8n) → Meta CAPI
     // ============================================================
     if (request.method === "POST") {
       try {
@@ -61,7 +89,7 @@ export default {
         const facebookApiUrl = `https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${accessToken}`;
 
         // --------------------------------------------------------
-        // 3. BANGUN user_data
+        // 4. BANGUN user_data
         //    - Contact event: hanya IP & User Agent (dari browser)
         //    - Purchase event: tambah nomor HP ter-hash (dari n8n)
         // --------------------------------------------------------
@@ -79,7 +107,7 @@ export default {
         }
 
         // --------------------------------------------------------
-        // 4. BANGUN custom_data
+        // 5. BANGUN custom_data
         //    - Contact event: nilai default (estimasi)
         //    - Purchase event: nilai nyata dari n8n
         // --------------------------------------------------------
@@ -100,7 +128,7 @@ export default {
         }
 
         // --------------------------------------------------------
-        // 5. SUSUN PAYLOAD FINAL KE META
+        // 6. SUSUN PAYLOAD FINAL KE META
         // --------------------------------------------------------
         const eventData = {
           data: [
@@ -117,7 +145,7 @@ export default {
         };
 
         // --------------------------------------------------------
-        // 6. KIRIM KE META GRAPH API
+        // 7. KIRIM KE META GRAPH API
         // --------------------------------------------------------
         const facebookResponse = await fetch(facebookApiUrl, {
           method:  "POST",
@@ -152,7 +180,7 @@ export default {
     }
 
     // ============================================================
-    // 7. STATUS CHECK (GET request — untuk cek worker aktif)
+    // 8. STATUS CHECK (GET request — untuk cek worker aktif)
     // ============================================================
     return new Response("Madu S4E CAPI Worker is Running 🔥 | Contact & Purchase Ready ✅", {
       status: 200,

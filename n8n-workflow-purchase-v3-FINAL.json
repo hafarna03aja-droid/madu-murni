@@ -1,0 +1,153 @@
+{
+  "name": "Madu S4E - Purchase Auto CAPI v3 FINAL",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [{ "mode": "everyMinute" }]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1PUx7cCpf09L5U_ajyenfWWvdG-1tcIG5C",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Lead Tracker",
+          "mode": "name"
+        },
+        "event": "rowUpdated",
+        "columnToWatch": "Status",
+        "options": {}
+      },
+      "id": "node-trigger",
+      "name": "📊 Trigger - Status Berubah di Sheet",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 4,
+      "position": [0, 0],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-paid",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Paid",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-not-sent",
+              "leftValue": "={{ $json.Sent_to_CAPI }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-if",
+      "name": "🔍 IF - Paid dan Belum SENT",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://madu-sae-capi.sedekahmudahgk.workers.dev",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify({ eventName: 'Purchase', eventId: ($json['Event_ID'] || 'unknown') + '_purchase', sourceUrl: $json['Source_URL'] || 'https://madubersanad.web.id', phone: $json['No_HP'] || '', value: Number((($json['Order_Value'] || '275000') + '').replace(/[^0-9.]/g,'')) || 275000, currency: 'IDR', buttonName: $json['Paket'] || 'Madu S4E', customerName: $json['Nama'] || 'Pelanggan' }) }}",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "node-http",
+      "name": "🚀 Kirim Purchase ke Meta CAPI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, -100]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1PUx7cCpf09L5U_ajyenfWWvdG-1tcIG5C",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Lead Tracker",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Event_ID": "={{ $('🔍 IF - Paid dan Belum SENT').item.json['Event_ID'] }}",
+            "Sent_to_CAPI": "SENT"
+          },
+          "matchingColumns": ["Event_ID"]
+        },
+        "options": {}
+      },
+      "id": "node-update-sheet",
+      "name": "✅ Tandai SENT di Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [720, -100],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "📊 Trigger - Status Berubah di Sheet": {
+      "main": [[{ "node": "🔍 IF - Paid dan Belum SENT", "type": "main", "index": 0 }]]
+    },
+    "🔍 IF - Paid dan Belum SENT": {
+      "main": [[{ "node": "🚀 Kirim Purchase ke Meta CAPI", "type": "main", "index": 0 }]]
+    },
+    "🚀 Kirim Purchase ke Meta CAPI": {
+      "main": [[{ "node": "✅ Tandai SENT di Google Sheets", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  }
+}

@@ -668,3 +668,97 @@ h1, h2, h3 {
         display: none;
     }
 }
+
+/* DYNAMIC PRICING CALCULATOR */
+.pricing-calculator {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.calculator-card {
+    padding: 40px;
+}
+
+.calculator-form {
+    background: var(--bg-light);
+    padding: 24px;
+    border-radius: var(--radius-md);
+    margin-bottom: 24px;
+    border: 1px solid var(--border-color);
+}
+
+.form-group {
+    margin-bottom: 24px;
+    text-align: left;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--dark-green);
+    font-size: 1.1rem;
+}
+
+.options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+}
+
+.variant-options {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.size-options {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.option-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    background: var(--white);
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.option-btn:hover {
+    border-color: var(--honey-yellow);
+    background: rgba(234, 179, 8, 0.05);
+}
+
+.option-btn.active {
+    border-color: var(--honey-dark);
+    background: var(--honey-yellow);
+    color: var(--wood-brown);
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3);
+}
+
+.option-icon {
+    font-size: 1.2rem;
+}
+
+.option-name {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .variant-options {
+        grid-template-columns: 1fr;
+    }
+    .size-options {
+        grid-template-columns: 1fr;
+    }
+}

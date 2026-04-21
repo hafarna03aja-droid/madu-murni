@@ -192,52 +192,59 @@
             <h2 class="section-title">Pilih Paket Spesial Anda Hari Ini</h2>
             <p class="section-subtitle">Investasi termurah untuk kesehatan jangka panjang keluarga.</p>
 
-            <div class="pricing-grid">
-                <!-- Package 1 -->
-                <div class="pricing-card">
-                    <div class="pricing-header">
-                        <h3>Paket 1 Botol</h3>
-                        <p>Cocok untuk pemula & coba rasa</p>
-                    </div>
-                    <div class="pricing-price">
-                        <span class="strike">Rp 295.000</span>
-                        <h2>Rp 275.000<small>/botol</small></h2>
-                    </div>
-                    <ul class="pricing-features">
-                        <li>✔️ 1 Botol Madu S4E (1 kg)</li>
-                        <li>🌼 Pilih Varian: Akasia / Kaliandra</li>
-                        <li>✔️ Full Nektar & Raw Honey</li>
-                        <li>❌ Belum Termasuk Ongkir</li>
-                        <li>❌ Tanpa Bonus Spesial</li>
-                    </ul>
-                    <a href="https://wa.me/62882003350385?text=Halo%20Admin%2C%20saya%20mau%20pesan%20Madu%20S4E%20Paket%201%20Botol."
-                        target="_blank" class="btn-cta btn-outline" onclick="trackLead(event, this, 'Pricing 1 Botol')">
-                        Pesan Paket 1 Botol
-                    </a>
-                </div>
+            <div class="pricing-calculator">
+                <div class="pricing-card best-seller calculator-card">
+                    <div class="best-seller-badge">🏆 PROMO HARI INI</div>
+                    
+                    <div class="calculator-form">
+                        <div class="form-group">
+                            <label>Pilih Varian Madu:</label>
+                            <div class="options-grid variant-options">
+                                <label class="option-btn active" data-variant="akasia">
+                                    <input type="radio" name="variant" value="akasia" checked style="display:none;">
+                                    <span class="option-icon">🌼</span>
+                                    <span class="option-name">Akasia</span>
+                                </label>
+                                <label class="option-btn" data-variant="kaliandra">
+                                    <input type="radio" name="variant" value="kaliandra" style="display:none;">
+                                    <span class="option-icon">🌺</span>
+                                    <span class="option-name">Kaliandra</span>
+                                </label>
+                            </div>
+                        </div>
 
-                <!-- Package 2 (Best Seller) -->
-                <div class="pricing-card best-seller">
-                    <div class="best-seller-badge">🏆 BEST SELLER</div>
-                    <div class="pricing-header">
-                        <h3>Paket 2 Botol</h3>
-                        <p>Paling pas untuk stok sekeluarga</p>
+                        <div class="form-group">
+                            <label>Pilih Ukuran:</label>
+                            <div class="options-grid size-options">
+                                <label class="option-btn active" data-size="1000">
+                                    <input type="radio" name="size" value="1000" checked style="display:none;">
+                                    <span class="option-name">1 Kg</span>
+                                </label>
+                                <label class="option-btn" data-size="500">
+                                    <input type="radio" name="size" value="500" style="display:none;">
+                                    <span class="option-name">500 Gram</span>
+                                </label>
+                                <label class="option-btn" data-size="250">
+                                    <input type="radio" name="size" value="250" style="display:none;">
+                                    <span class="option-name">250 Gram</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
-                    <div class="pricing-price">
-                        <span class="strike">Rp 590.000</span>
-                        <h2>Rp 500.000<small>/paket</small></h2>
+
+                    <div class="pricing-price" id="dynamic-price-display">
+                        <span class="strike" id="price-strike">Rp 200.000</span>
+                        <h2><span id="price-main">Rp 180.000</span><small id="price-unit">/botol</small></h2>
                     </div>
+                    
                     <ul class="pricing-features">
-                        <li>✔️ 2 Botol Madu S4E (Total 2 Kg)</li>
-                        <li>🌼🌺 Pilih Varian: Akasia & Kaliandra</li>
+                        <li>✔️ <span id="feature-desc">1 Botol Madu S4E Akasia (1 kg)</span></li>
                         <li>✔️ Full Nektar & Raw Honey</li>
-                        <li>🎁 <strong>HEMAT</strong> Pilihan Terbaik</li>
-                        <li>🚚 <strong>GRATIS</strong> Ongkos Kirim (P. Jawa)*</li>
+                        <li>✔️ Garansi Kemurnian 10x Lipat</li>
                     </ul>
-                    <a href="https://wa.me/62882003350385?text=Halo%20Admin%2C%20saya%20mau%20pesan%20Madu%20S4E%20Paket%202%20Botol."
-                        target="_blank" class="btn-cta btn-primary pulse-animation"
-                        onclick="trackLead(event, this, 'Pricing 2 Botol')">
-                        🛒 Ya, Saya Mau Promo Best Seller!
+                    
+                    <a href="#" id="wa-checkout-btn" target="_blank" class="btn-cta btn-primary pulse-animation" onclick="trackLead(event, this, 'Pricing Dynamic')">
+                        🛒 Pesan via WhatsApp Sekarang
                     </a>
                 </div>
             </div>
@@ -313,6 +320,74 @@
             }).catch(err => console.error("Lead Tracker Error:", err));
 
         }
+
+        // --- Dynamic Pricing Logic ---
+        const pricingData = {
+            akasia: {
+                name: "Madu S4E Akasia",
+                prices: {
+                    "1000": { price: 180000, strike: 200000, desc: "1 kg" },
+                    "500": { price: 95000, strike: 110000, desc: "500 Gram" },
+                    "250": { price: 50000, strike: 60000, desc: "250 Gram" }
+                }
+            },
+            kaliandra: {
+                name: "Madu S4E Kaliandra",
+                prices: {
+                    "1000": { price: 275000, strike: 295000, desc: "1 kg" },
+                    "500": { price: 145000, strike: 160000, desc: "500 Gram" },
+                    "250": { price: 75000, strike: 85000, desc: "250 Gram" }
+                }
+            }
+        };
+
+        const formatRupiah = (number) => {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+        };
+
+        function updatePricing() {
+            const variantInput = document.querySelector('input[name="variant"]:checked');
+            const sizeInput = document.querySelector('input[name="size"]:checked');
+            
+            if (!variantInput || !sizeInput) return;
+            
+            const variant = variantInput.value;
+            const size = sizeInput.value;
+            
+            const data = pricingData[variant].prices[size];
+            const variantName = pricingData[variant].name;
+            
+            document.getElementById('price-strike').innerText = formatRupiah(data.strike);
+            document.getElementById('price-main').innerText = formatRupiah(data.price);
+            document.getElementById('feature-desc').innerText = `1 Botol ${variantName} (${data.desc})`;
+            
+            // Update WA Link
+            const phone = "62882003350385";
+            const text = `Halo Admin, saya mau pesan ${variantName} Ukuran ${data.desc} dengan harga ${formatRupiah(data.price)}.`;
+            const waLink = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+            
+            document.getElementById('wa-checkout-btn').href = waLink;
+        }
+
+        // Add Event Listeners to Radio Buttons
+        document.querySelectorAll('input[type=radio][name=variant]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.variant-options .option-btn').forEach(lbl => lbl.classList.remove('active'));
+                this.closest('.option-btn').classList.add('active');
+                updatePricing();
+            });
+        });
+
+        document.querySelectorAll('input[type=radio][name=size]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.size-options .option-btn').forEach(lbl => lbl.classList.remove('active'));
+                this.closest('.option-btn').classList.add('active');
+                updatePricing();
+            });
+        });
+
+        // Initialize Pricing
+        document.addEventListener('DOMContentLoaded', updatePricing);
     </script>
 </body>
 

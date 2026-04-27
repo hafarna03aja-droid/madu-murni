@@ -250,19 +250,15 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Pilih Ukuran:</label>
-                            <div class="options-grid size-options">
-                                <label class="option-btn active" data-size="1000">
-                                    <input type="radio" name="size" value="1000" checked style="display:none;">
-                                    <span class="option-name">1 Kg</span>
+                            <label>Pilih Paket (1 Kg / Botol):</label>
+                            <div class="options-grid package-options">
+                                <label class="option-btn active" data-package="1">
+                                    <input type="radio" name="package" value="1" checked style="display:none;">
+                                    <span class="option-name">1 Botol</span>
                                 </label>
-                                <label class="option-btn" data-size="500">
-                                    <input type="radio" name="size" value="500" style="display:none;">
-                                    <span class="option-name">500 Gram</span>
-                                </label>
-                                <label class="option-btn" data-size="250">
-                                    <input type="radio" name="size" value="250" style="display:none;">
-                                    <span class="option-name">250 Gram</span>
+                                <label class="option-btn" data-package="2">
+                                    <input type="radio" name="package" value="2" style="display:none;">
+                                    <span class="option-name">2 Botol (Promo + Free Ongkir Jawa)</span>
                                 </label>
                             </div>
                         </div>
@@ -270,11 +266,11 @@
 
                     <div class="pricing-price" id="dynamic-price-display">
                         <span class="strike" id="price-strike">Rp 295.000</span>
-                        <h2><span id="price-main">Rp 275.000</span><small id="price-unit">/botol</small></h2>
+                        <h2><span id="price-main">Rp 275.000</span></h2>
                     </div>
 
                     <ul class="pricing-features">
-                        <li>✔️ <span id="feature-desc">1 Botol Madu S4E Kaliandra (1 kg)</span></li>
+                        <li>✔️ <span id="feature-desc">Madu S4E Kaliandra - 1 Botol (1 kg)</span></li>
                         <li>✔️ Full Nektar & Raw Honey</li>
                         <li>✔️ Garansi Kemurnian 10x Lipat</li>
                     </ul>
@@ -361,20 +357,18 @@
 
         // --- Dynamic Pricing Logic ---
         const pricingData = {
-            akasia: {
-                name: "Madu S4E Akasia",
-                prices: {
-                    "1000": { price: 180000, strike: 200000, desc: "1 kg" },
-                    "500": { price: 95000, strike: 110000, desc: "500 Gram" },
-                    "250": { price: 50000, strike: 60000, desc: "250 Gram" }
-                }
-            },
             kaliandra: {
                 name: "Madu S4E Kaliandra",
                 prices: {
-                    "1000": { price: 275000, strike: 295000, desc: "1 kg" },
-                    "500": { price: 145000, strike: 160000, desc: "500 Gram" },
-                    "250": { price: 75000, strike: 85000, desc: "250 Gram" }
+                    "1": { price: 275000, strike: 295000, desc: "1 Botol (1 kg)" },
+                    "2": { price: 520000, strike: 550000, desc: "2 Botol (2 kg) + Free Ongkir P. Jawa" }
+                }
+            },
+            akasia: {
+                name: "Madu S4E Akasia",
+                prices: {
+                    "1": { price: 175000, strike: 195000, desc: "1 Botol (1 kg)" },
+                    "2": { price: 330000, strike: 350000, desc: "2 Botol (2 kg) + Free Ongkir P. Jawa" }
                 }
             }
         };
@@ -385,23 +379,23 @@
 
         function updatePricing() {
             const variantInput = document.querySelector('input[name="variant"]:checked');
-            const sizeInput = document.querySelector('input[name="size"]:checked');
+            const packageInput = document.querySelector('input[name="package"]:checked');
 
-            if (!variantInput || !sizeInput) return;
+            if (!variantInput || !packageInput) return;
 
             const variant = variantInput.value;
-            const size = sizeInput.value;
+            const pkg = packageInput.value;
 
-            const data = pricingData[variant].prices[size];
+            const data = pricingData[variant].prices[pkg];
             const variantName = pricingData[variant].name;
 
             document.getElementById('price-strike').innerText = formatRupiah(data.strike);
             document.getElementById('price-main').innerText = formatRupiah(data.price);
-            document.getElementById('feature-desc').innerText = `1 Botol ${variantName} (${data.desc})`;
+            document.getElementById('feature-desc').innerText = `${variantName} - ${data.desc}`;
 
             // Update WA Link
             const phone = "62882003350385";
-            const text = `Halo Admin, saya mau pesan ${variantName} Ukuran ${data.desc} dengan harga ${formatRupiah(data.price)}.`;
+            const text = `Halo Admin, saya mau pesan ${variantName} Paket ${data.desc} dengan harga ${formatRupiah(data.price)}.`;
             const waLink = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 
             document.getElementById('wa-checkout-btn').href = waLink;
@@ -416,9 +410,9 @@
             });
         });
 
-        document.querySelectorAll('input[type=radio][name=size]').forEach(radio => {
+        document.querySelectorAll('input[type=radio][name=package]').forEach(radio => {
             radio.addEventListener('change', function () {
-                document.querySelectorAll('.size-options .option-btn').forEach(lbl => lbl.classList.remove('active'));
+                document.querySelectorAll('.package-options .option-btn').forEach(lbl => lbl.classList.remove('active'));
                 this.closest('.option-btn').classList.add('active');
                 updatePricing();
             });

@@ -214,16 +214,16 @@ h1, h2, h3 {
 .hero-product-box {
     position: relative;
     padding: 35px 25px;
-    border-radius: 24px;
-    /* 3D Gold Gradient Background */
-    background: linear-gradient(135deg, #FBF5B7 0%, #D4AF37 40%, #AA771C 100%);
+    border-radius: 48px; /* Sudut lebih tumpul (rounded) */
+    /* 3D Gold Gradient Background Cerah */
+    background: linear-gradient(135deg, #FFFFFF 0%, #FFE066 30%, #FFB900 80%, #F59E0B 100%);
     /* Shadow for 3D effect & glowing */
     box-shadow: 
-        0 25px 50px -12px rgba(0, 0, 0, 0.6), /* Deep dark shadow */
-        0 0 40px rgba(212, 175, 55, 0.4), /* Outer gold glow */
-        inset 0 4px 10px rgba(255, 255, 255, 0.9), /* Top highlight */
-        inset 0 -8px 15px rgba(139, 101, 8, 0.7); /* Bottom shade */
-    border: 2px solid #FFF5D1;
+        0 25px 50px -12px rgba(0, 0, 0, 0.4), /* Shadow lebih soft */
+        0 0 50px rgba(255, 185, 0, 0.5), /* Outer gold glow cerah */
+        inset 0 4px 15px rgba(255, 255, 255, 1), /* Top highlight kuat */
+        inset 0 -8px 20px rgba(217, 119, 6, 0.5); /* Bottom shade cerah */
+    border: 3px solid #FFFBEB;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -235,19 +235,19 @@ h1, h2, h3 {
 .hero-product-box:hover {
     transform: perspective(1000px) rotateY(0deg) translateY(-15px);
     box-shadow: 
-        0 35px 60px -15px rgba(0, 0, 0, 0.7),
-        0 0 50px rgba(212, 175, 55, 0.6),
-        inset 0 4px 10px rgba(255, 255, 255, 0.9),
-        inset 0 -8px 15px rgba(139, 101, 8, 0.8);
+        0 35px 60px -15px rgba(0, 0, 0, 0.5),
+        0 0 60px rgba(255, 185, 0, 0.6),
+        inset 0 4px 15px rgba(255, 255, 255, 1),
+        inset 0 -8px 20px rgba(217, 119, 6, 0.6);
 }
 
 .box-glow {
     position: absolute;
     inset: 15px;
-    border-radius: 16px;
-    /* Subtle inner backdrop to separate bottle from the gold box */
-    background: radial-gradient(circle at center, rgba(255,255,255,0.4) 0%, rgba(212,175,55,0.05) 60%, rgba(139,101,8,0.1) 100%);
-    box-shadow: inset 0 2px 10px rgba(139,101,8,0.3);
+    border-radius: 36px; /* Menyesuaikan sudut luar */
+    /* Subtle inner backdrop cerah */
+    background: radial-gradient(circle at center, rgba(255,255,255,0.7) 0%, rgba(255,215,0,0.1) 60%, rgba(245,158,11,0.15) 100%);
+    box-shadow: inset 0 2px 10px rgba(245,158,11,0.2);
     z-index: 0;
 }
 

@@ -82,7 +82,7 @@
         },
         "sendBody": true,
         "contentType": "json",
-        "body": "={{ JSON.stringify({ eventName: 'Purchase', eventId: ($json['Event_ID'] || 'unknown') + '_purchase', sourceUrl: $json['Source_URL'] || 'https://madubersanad.web.id', phone: $json['No_HP'] || '', value: Number((($json['Order_Value'] || '275000') + '').replace(/[^0-9.]/g,'')) || 275000, currency: 'IDR', buttonName: $json['Paket'] || 'Madu S4E', customerName: $json['Nama'] || 'Pelanggan' }) }}",
+        "body": "={{ JSON.stringify({ eventName: 'Purchase', eventId: ($json['Event_ID'] || 'unknown') + '_purchase', sourceUrl: $json['Source_URL'] || 'https://madubersanad.my.id', phone: $json['No_HP'] || '', value: Number((($json['Order_Value'] || '275000') + '').replace(/[^0-9.]/g,'')) || 275000, currency: 'IDR', buttonName: $json['Paket'] || 'Madu S4E', customerName: $json['Nama'] || 'Pelanggan' }) }}",
         "options": {
           "timeout": 15000,
           "response": {
